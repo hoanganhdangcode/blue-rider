@@ -1,0 +1,17 @@
+name: Docker CI
+
+on:
+  push:
+    paths:
+      - 'infra/docker/**'
+      - '.github/workflows/docker-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test
+        run: echo "Docker CI - ${{ github.ref_name }}"

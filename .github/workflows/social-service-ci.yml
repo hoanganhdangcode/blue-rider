@@ -1,0 +1,17 @@
+name: Social Service CI
+
+on:
+  push:
+    paths:
+      - 'backend/social-service/**'
+      - '.github/workflows/social-service-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test
+        run: echo "Social Service CI - ${{ github.ref_name }}"

@@ -1,0 +1,117 @@
+name: Core Service CI
+on:
+  push:
+    paths:
+      - 'backend/core-service/**'
+      - '.github/workflows/core-service-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/core-service/**'
+      - '.github/workflows/core-service-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/core-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          ./gradlew check 2>&1 | tee lint.log
+
+      - name: Test
+        id: test
+        if: steps.lint.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          ./gradlew test 2>&1 | tee test.log
+
+      - name: Upload CI Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-service-ci-logs
+          path: |
+            backend/core-service/lint.log
+            backend/core-service/test.log
+          if-no-files-found: ignore
+
+      - name: Telegram Success
+        if: steps.lint.outcome == 'success' && steps.test.outcome == 'success'
+        working-directory: .
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::Thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID (có thể do chạy trên PR từ fork). Bỏ qua gửi thông báo."
+            exit 0
+          fi
+
+          curl -sf -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=✅ Core Service CI PASSED
+          Editor: ${{ github.actor }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Lint: PASSED
+          Test: PASSED" \
+          || echo "::warning::Gửi thông báo Telegram (Success) thất bại"
+
+      - name: Telegram Failed
+        if: steps.lint.outcome == 'failure' || steps.test.outcome == 'failure'
+        working-directory: .
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ "${{ steps.lint.outcome }}" = "failure" ]; then
+            FAILED_STEP="Lint / Checkstyle"
+            LOG_FILE="backend/core-service/lint.log"
+          else
+            FAILED_STEP="Unit Test"
+            LOG_FILE="backend/core-service/test.log"
+          fi
+          ERROR_LOG=$(tail -n 40 "$LOG_FILE" 2>/dev/null || echo "Unable to read error log.")
+          MESSAGE="❌ Core Service CI FAILED
+          Editor: ${{ github.actor }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Failed step: $FAILED_STEP
+          Error:
+          $ERROR_LOG
+          Full log:
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::Thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID (có thể do chạy trên PR từ fork). Bỏ qua gửi thông báo."
+          else
+            curl -sf -X POST \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              --data-urlencode "text=$MESSAGE" \
+            || echo "::warning::Gửi thông báo Telegram (Failed) thất bại"
+          fi
+
+          exit 1
