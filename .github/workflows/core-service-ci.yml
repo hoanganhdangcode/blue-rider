@@ -1,6 +1,9 @@
 name: Core Service CI
 on:
   push:
+    branches:
+      - develop
+      - main
     paths:
       - 'backend/core-service/**'
       - '.github/workflows/core-service-ci.yml'
@@ -8,6 +11,7 @@ on:
     paths:
       - 'backend/core-service/**'
       - '.github/workflows/core-service-ci.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read

@@ -3,18 +3,33 @@ name: Deploy
 on:
   push:
     branches:
+      - develop
       - main
     paths:
       - 'backend/**'
       - 'frontend/**'
       - 'infra/**'
+  workflow_dispatch:
 
 jobs:
-  test:
+  staging:
+    name: Deploy Staging (develop)
+    if: github.ref_name == 'develop'
     runs-on: ubuntu-latest
-
+    environment: staging
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test
-        run: echo "Deploy - ${{ github.ref_name }}"
+      - name: Deploy staging
+        run: echo "Deploy STAGING từ ${{ github.sha }}"
+
+  production:
+    name: Deploy Production (main)
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy production
+        run: echo "Deploy PRODUCTION từ ${{ github.sha }}"
