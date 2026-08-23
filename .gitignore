@@ -7,3 +7,5 @@
 *.log
 .codegraph/
 opencode-skills/
+AGENTS.md
+docs/PROJECT_CONTEXT.md
