@@ -7,19 +7,38 @@ on:
       - main
     paths:
       - 'infra/docker/**'
+      - 'backend/**'
       - '.github/workflows/docker-ci.yml'
+
   pull_request:
     paths:
       - 'infra/docker/**'
+      - 'backend/**'
       - '.github/workflows/docker-ci.yml'
+
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
+    name: Docker Build & Compose Test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Test
-        run: echo "Docker CI - ${{ github.ref_name }}"
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Docker Compose
+        working-directory: infra/docker
+        run: |
+          docker compose config
+
+      - name: Build Docker Images
+        working-directory: infra/docker
+        run: |
+          docker compose build

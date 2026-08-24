@@ -7,29 +7,93 @@ on:
       - main
     paths:
       - 'backend/**'
-      - 'frontend/**'
       - 'infra/**'
+      - '.github/workflows/deploy.yml'
+
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   staging:
-    name: Deploy Staging (develop)
+    name: Deploy Staging
     if: github.ref_name == 'develop'
     runs-on: ubuntu-latest
     environment: staging
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Deploy staging
-        run: echo "Deploy STAGING từ ${{ github.sha }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy Staging
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh "$VPS_USER@$VPS_HOST" << 'EOF'
+            set -e
+
+            cd ~/blue-rider
+
+            git fetch origin develop
+            git reset --hard origin/develop
+
+            docker compose \
+              -f infra/docker/docker-compose.yml \
+              up -d --build
+
+            docker compose \
+              -f infra/docker/docker-compose.yml \
+              ps
+          EOF
 
   production:
-    name: Deploy Production (main)
+    name: Deploy Production
     if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment: production
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Deploy production
-        run: echo "Deploy PRODUCTION từ ${{ github.sha }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy Production
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh "$VPS_USER@$VPS_HOST" << 'EOF'
+            set -e
+
+            cd ~/blue-rider
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            docker compose \
+              -f infra/docker/docker-compose.yml \
+              up -d --build
+
+            docker compose \
+              -f infra/docker/docker-compose.yml \
+              ps
+          EOF

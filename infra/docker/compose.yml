@@ -1,0 +1,20 @@
+services:
+  postgres:
+    build:
+      context: ../postgres
+    container_name: blue-ride-postgres
+    ports:
+      - "5432:5432"
+
+  core-service:
+    build:
+      context: ../../backend/core-service
+    container_name: blue-ride-core-service
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: ${POSTGRES_URL}
+      DB_USERNAME: ${POSTGRES_USERNAME}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
