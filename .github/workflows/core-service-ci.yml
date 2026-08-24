@@ -1,7 +1,6 @@
 name: Core Service CI
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - develop
