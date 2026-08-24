@@ -1,0 +1,14 @@
+# Local infrastructure data
+docker-data/
+mysql-data/
+mongo-data/
+redis-data/
+minio-data/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log

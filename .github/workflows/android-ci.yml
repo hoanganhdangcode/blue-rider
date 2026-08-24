@@ -1,0 +1,44 @@
+name: Android CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'frontend/android/**'
+      - '.github/workflows/android-ci.yml'
+  pull_request:
+    paths:
+      - 'frontend/android/**'
+      - '.github/workflows/android-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  dev:
+    name: Dev build (Internal Testing)
+    if: github.event_name == 'pull_request' || github.ref_name == 'develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build debug
+        run: echo "Build debug cho môi trường dev - ${{ github.sha }}"
+
+      - name: Distribute to testers
+        run: echo "Đẩy bản test lên Firebase App Distribution / Play Internal Testing"
+
+  prod:
+    name: Prod build (Play Production)
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release signed
+        run: echo "Build release signed với keystore production"
+
+      - name: Upload to Play Store
+        run: echo "Đẩy lên Google Play Production track"

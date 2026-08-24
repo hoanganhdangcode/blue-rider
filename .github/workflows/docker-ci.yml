@@ -1,0 +1,45 @@
+name: Docker CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'infra/**'
+      - 'backend/**'
+      - '.github/workflows/docker-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Validate & Build Images
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/blue_ride_postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Compose File
+        working-directory: infra/docker
+        run: docker compose config --quiet
+
+      - name: Build Images
+        working-directory: infra/docker
+        run: docker compose build
+
