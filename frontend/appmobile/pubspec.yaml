@@ -1,0 +1,43 @@
+name: app_mobile_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+
+workspace:
+  - apps/app_a
+  - apps/app_b
+  - packages/core
+  - packages/ui
+  - packages/service
+
+dev_dependencies:
+  melos: ^7.0.0
+
+melos:
+  scripts:
+    analyze:
+      run: dart analyze .
+    test:flutter:
+      description: Run Flutter/widget tests
+      run: flutter test
+      exec:
+        concurrency: 1
+      packageFilters:
+        flutter: true
+        dirExists: test
+    test:dart:
+      description: Run pure Dart package tests
+      run: dart test
+      exec:
+        concurrency: 1
+      packageFilters:
+        flutter: false
+        dirExists: test
+    test:
+      description: Run all package tests
+      run: melos run test:flutter && melos run test:dart
+
+# Root is a workspace host only; Material is enabled in each app.
+flutter:
+  uses-material-design: true
