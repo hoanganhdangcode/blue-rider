@@ -21,15 +21,15 @@ public interface AccountJpaRepository extends JpaRepository<AccountJpaEntity, Lo
     long countByPhoneNumber(String phoneNumber);
 
     /**
-     * Atomic insert that performs no-op when the phone number already exists.
-     * Requires PostgreSQL (or an H2 instance in PostgreSQL mode) and backs
-     * {@link AccountRepository#findOrCreateByPhoneNumber}.
+     * Atomic insert that performs no-op when a conflicting row (the unique
+     * {@code phone_number}) already exists. The target-less form is valid in both
+     * PostgreSQL (production) and H2 in PostgreSQL mode (tests).
      */
     @Modifying
     @Query(nativeQuery = true,
             value = "INSERT INTO account (phone_number, status, created_at, updated_at) "
                     + "VALUES (:phone, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) "
-                    + "ON CONFLICT (phone_number) DO NOTHING")
+                    + "ON CONFLICT DO NOTHING")
     int insertIfAbsent(@Param("phone") String phoneNumber);
 }
 
