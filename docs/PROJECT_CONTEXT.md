@@ -1,18 +1,23 @@
 # PROJECT_CONTEXT — blue-ride backend
 
 Source of truth for backend architecture. Services do not share databases.
+Vietnamese onboarding (build, structure, deploy): see [BACKEND_GUIDE.md](BACKEND_GUIDE.md).
 Synchronous calls use internal REST on the private Docker network.
-Asynchronous work uses Kafka. Clients never call core or operator directly.
+Asynchronous work uses Kafka. Clients never call auth or core directly.
 
 ## Processes
+
+Three running services. `backend/crypto` is a **library** (Argon2id, JWT-RSA), not a process.
 
 | Process | Stack | Owns | Must not |
 |---|---|---|---|
 | `gateway-service` | Java 21, Spring Boot | Public `POST /api`, action routing, envelope | Business logic, databases |
-| `core-service` | Java 21, Spring Boot, PostgreSQL | Identity and other ACID data (future) | Trip matching, driver GPS |
-| `operator-service` | Go, MongoDB, Redis, Kafka | Trip/matching/location (future) | User passwords, JWT signing |
+| `auth-service` | Java 21, Spring Boot, PostgreSQL | Users, auth, driver/vehicle master data (ACID) | Trip matching, driver GPS |
+| `core-service` | Java 21, Spring Boot, MongoDB, Redis, Kafka | Trip, matching, delivery, location | User passwords, JWT signing |
 
 Nginx terminates HTTP and reverse-proxies `/api` to the gateway only.
+
+Vehicle papers/registration live in auth. Trips, matching, GPS, and delivery orders live in core. Core calls auth over internal REST when it needs a profile or vehicle.
 
 ## Public contract
 
@@ -25,7 +30,7 @@ Envelope:
 ```json
 {
   "success": true,
-  "action": "core.ping",
+  "action": "auth.ping",
   "data": {},
   "error": null
 }
@@ -48,8 +53,8 @@ Only ping actions exist. Use cases add rows to `gateway-service` `actions.yml` a
 
 | X-API-ACTION | Upstream | Auth |
 |---|---|---|
+| `auth.ping` | `GET {auth}/internal/v1/ping` | no |
 | `core.ping` | `GET {core}/internal/v1/ping` | no |
-| `operator.ping` | `GET {operator}/internal/v1/ping` | no |
 
 Unknown or missing `X-API-ACTION` → HTTP 400, envelope `UNKNOWN_ACTION` / `MISSING_ACTION`.
 
@@ -58,29 +63,29 @@ Unknown or missing `X-API-ACTION` → HTTP 400, envelope `UNKNOWN_ACTION` / `MIS
 - Header `X-Internal-Key` required on `/internal/**`.
 - Health: `GET /health` on each service (no internal key) for Docker checks.
 - Gateway injects `X-Internal-Key` when forwarding. Later it will also inject `X-User-Id` / `X-User-Role` from JWT.
-- Crypto (JWT-RSA, Argon2id, ECDH, AES-256-GCM) lives in `backend/crypto`. Core signs tokens later; operator verifies via JWKS. Do not copy hashing/signing into operator.
+- Crypto (JWT-RSA, Argon2id) lives in `backend/crypto`. Auth signs tokens later; core verifies via public key/JWKS. Do not copy hashing/signing into core.
 
 ## Data stores (roles)
 
-- **PostgreSQL** (`core-service`): ACID identity data. Flyway owns schema. No cross-service queries.
-- **MongoDB** (`operator-service`): trip documents and related operational data (collections added with use cases).
-- **Redis** (`operator-service`): high-frequency driver location (`GEO`), presence, short-lived locks. Key namespace reserved: `drivers:geo:{vehicleType}`, `trip:offer:{tripId}`. Not used in the base scaffold.
+- **PostgreSQL** (`auth-service`): ACID identity data. Flyway owns schema. No cross-service queries.
+- **MongoDB** (`core-service`): trip documents and related operational data (collections added with use cases).
+- **Redis** (`core-service`): high-frequency driver location (`GEO`), presence, short-lived locks. Key namespace reserved: `drivers:geo:{vehicleType}`, `trip:offer:{tripId}`. Not used in the base scaffold.
 - **Kafka**: event bus between services. Topic names reserved (no business producers yet):
   - `user.events`
   - `trip.events`
 
 ## Local stack
 
-`infra/docker/compose.yml` runs nginx, gateway, core, operator, Postgres, MongoDB, Redis, Kafka (KRaft, single broker).
+`infra/docker/compose.yml` runs nginx, gateway, auth, core, Postgres, MongoDB, Redis, Kafka (KRaft, single broker).
 
 Proof the base works:
 
 ```bash
 curl -s -X POST http://localhost/api \
-  -H "X-API-ACTION: core.ping" \
+  -H "X-API-ACTION: auth.ping" \
   -H "Content-Type: application/json"
 
 curl -s -X POST http://localhost/api \
-  -H "X-API-ACTION: operator.ping" \
+  -H "X-API-ACTION: core.ping" \
   -H "Content-Type: application/json"
 ```

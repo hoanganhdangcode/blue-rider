@@ -7,7 +7,9 @@ on:
       - main
     paths:
       - 'backend/core-service/**'
-      - 'backend/crypto/**'
+      - 'backend/build.gradle.kts'
+      - 'backend/settings.gradle.kts'
+      - 'backend/config/checkstyle/**'
       - '.github/workflows/core-service-ci.yml'
   workflow_dispatch:
 
@@ -20,31 +22,11 @@ concurrency:
 
 jobs:
   test:
-    name: Lint & Test (Postgres Docker)
+    name: Lint & Test
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend/core-service
-
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: blue_ride_postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      POSTGRES_URL: jdbc:postgresql://localhost:5432/blue_ride_postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
+        working-directory: backend
 
     steps:
       - name: Checkout
@@ -62,14 +44,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Test crypto module
-        run: ./gradlew -p ../crypto test --no-daemon
-
-      - name: Lint (Checkstyle)
-        run: ./gradlew check --no-daemon
-
-      - name: Test (Flyway migrate + JPA validate)
-        run: ./gradlew test --no-daemon
+      - name: Lint & Test
+        run: ./gradlew :core-service:check --no-daemon
 
       - name: Upload Test Reports
         if: failure()

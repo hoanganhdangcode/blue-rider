@@ -7,7 +7,9 @@ on:
       - main
     paths:
       - 'backend/gateway-service/**'
-      - 'backend/crypto/**'
+      - 'backend/build.gradle.kts'
+      - 'backend/settings.gradle.kts'
+      - 'backend/config/checkstyle/**'
       - '.github/workflows/gateway-service-ci.yml'
   workflow_dispatch:
 
@@ -24,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend/gateway-service
+        working-directory: backend
 
     steps:
       - name: Checkout
@@ -42,11 +44,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Lint (Checkstyle)
-        run: ./gradlew check --no-daemon
-
-      - name: Test
-        run: ./gradlew test --no-daemon
+      - name: Lint & Test
+        run: ./gradlew :gateway-service:check --no-daemon
 
       - name: Upload Test Reports
         if: failure()

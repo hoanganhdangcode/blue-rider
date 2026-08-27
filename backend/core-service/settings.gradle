@@ -1,7 +1,0 @@
-rootProject.name = 'core-service'
-
-includeBuild('../crypto') {
-	dependencySubstitution {
-		substitute module('com.blueride:crypto') using project(':')
-	}
-}

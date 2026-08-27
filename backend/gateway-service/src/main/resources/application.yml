@@ -1,0 +1,11 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+
+app:
+  internal-api-key: ${INTERNAL_API_KEY:dev-internal-key}
+  auth-base-url: ${AUTH_BASE_URL:http://localhost:8081}
+  core-base-url: ${CORE_BASE_URL:http://localhost:8082}

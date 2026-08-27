@@ -1,0 +1,1 @@
+-- Auth schema baseline. Domain tables (users, drivers, vehicles) are added in later migrations.
