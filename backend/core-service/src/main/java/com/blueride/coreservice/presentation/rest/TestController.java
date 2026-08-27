@@ -1,5 +1,6 @@
 package com.blueride.coreservice.presentation.rest;
 
+import com.blueride.coreservice.common.BaseResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     @GetMapping
-    public String test() {
-        return "Core Service is running";
+    public BaseResponse<String> test() {
+        return BaseResponse.success("Core Service is running");
     }
 }

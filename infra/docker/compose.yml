@@ -38,6 +38,9 @@ services:
       POSTGRES_URL: ${POSTGRES_URL:-jdbc:postgresql://postgres:5432/blue_ride_postgres}
       POSTGRES_USERNAME: ${POSTGRES_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_KEYS_DIRECTORY: /app/keys
+    volumes:
+      - ./secrets:/app/keys
     depends_on:
       postgres:
         condition: service_healthy

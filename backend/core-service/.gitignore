@@ -5,6 +5,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# JWT RSA keys / secrets (Docker volume mount -> /app/keys)
+secrets/
+*.key
+
 ### STS ###
 .apt_generated
 .classpath

@@ -9,3 +9,12 @@
 opencode-skills/
 AGENTS.md
 docs/PROJECT_CONTEXT.md
+
+# JWT RSA keys / secrets (mounted via Docker volume, e.g. ./secrets -> /app/keys)
+secrets/
+**/secrets/
+private.key
+public.key
+opencode-skills/
+AGENTS.md
+docs/PROJECT_CONTEXT.md
