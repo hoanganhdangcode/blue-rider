@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'backend/core-service/**'
+      - 'backend/crypto/**'
       - '.github/workflows/core-service-ci.yml'
   workflow_dispatch:
 
@@ -60,6 +61,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Test crypto module
+        run: ./gradlew -p ../crypto test --no-daemon
 
       - name: Lint (Checkstyle)
         run: ./gradlew check --no-daemon

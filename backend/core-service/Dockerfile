@@ -1,24 +1,20 @@
 FROM gradle:9-jdk21 AS builder
 
-WORKDIR /app
+WORKDIR /src
+COPY crypto /src/crypto
+COPY core-service /src/core-service
 
-COPY build.gradle settings.gradle ./
-COPY gradle ./gradle
-COPY gradlew ./
-
-RUN chmod +x gradlew
-RUN ./gradlew dependencies --no-daemon
-
-COPY src ./src
-
-RUN ./gradlew bootJar --no-daemon
-
+WORKDIR /src/core-service
+RUN chmod +x gradlew && ./gradlew bootJar --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
 
-WORKDIR /app
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends curl \
+	&& rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/build/libs/*.jar app.jar
+WORKDIR /app
+COPY --from=builder /src/core-service/build/libs/*.jar app.jar
 
 EXPOSE 8080
 

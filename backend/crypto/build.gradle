@@ -1,0 +1,29 @@
+plugins {
+	id 'java-library'
+}
+
+group = 'com.blueride'
+version = '0.0.1-SNAPSHOT'
+description = 'Shared crypto primitives for blue-ride services'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.bouncycastle:bcprov-jdk18on:1.80'
+	implementation 'com.nimbusds:nimbus-jose-jwt:10.4.2'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

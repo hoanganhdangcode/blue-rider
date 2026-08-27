@@ -1,0 +1,11 @@
+actions:
+  core.ping:
+    service: core
+    method: GET
+    path: /internal/v1/ping
+    auth: false
+  operator.ping:
+    service: operator
+    method: GET
+    path: /internal/v1/ping
+    auth: false
