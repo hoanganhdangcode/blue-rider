@@ -45,9 +45,10 @@ jobs:
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
           POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
         run: |
-          printf 'POSTGRES_URL=%s\nPOSTGRES_USERNAME=%s\nPOSTGRES_PASSWORD=%s\n' \
-            "$POSTGRES_URL" "$POSTGRES_USERNAME" "$POSTGRES_PASSWORD" \
+          printf 'POSTGRES_URL=%s\nPOSTGRES_USERNAME=%s\nPOSTGRES_PASSWORD=%s\nINTERNAL_API_KEY=%s\n' \
+            "$POSTGRES_URL" "$POSTGRES_USERNAME" "$POSTGRES_PASSWORD" "$INTERNAL_API_KEY" \
             | ssh "$VPS_USER@$VPS_HOST" 'cat > ~/blue-rider/.env && chmod 600 ~/blue-rider/.env'
 
       - name: Deploy Staging
@@ -65,10 +66,12 @@ jobs:
 
             docker compose \
               -f infra/docker/compose.yml \
+              --profile nginx \
               up -d --build
 
             docker compose \
               -f infra/docker/compose.yml \
+              --profile nginx \
               ps
           EOF
 

@@ -8,13 +8,13 @@
 .codegraph/
 opencode-skills/
 AGENTS.md
-docs/PROJECT_CONTEXT.md
 
 # JWT RSA keys / secrets (mounted via Docker volume, e.g. ./secrets -> /app/keys)
 secrets/
 **/secrets/
 private.key
 public.key
-opencode-skills/
-AGENTS.md
-docs/PROJECT_CONTEXT.md
+
+# Per-environment Flutter dart-define files (local LAN IP, real API hosts).
+# Commit only the *.json.example templates.
+frontend/appmobile/env/*.json

@@ -1,0 +1,103 @@
+name: Gateway Service CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'backend/gateway-service/**'
+      - 'backend/build.gradle.kts'
+      - 'backend/settings.gradle.kts'
+      - 'backend/config/checkstyle/**'
+      - '.github/workflows/gateway-service-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gateway-service-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint & Test
+        run: ./gradlew :gateway-service:check --no-daemon
+
+      - name: Upload Test Reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-service-test-reports-${{ github.run_id }}
+          path: backend/gateway-service/build/reports/tests/test/
+          if-no-files-found: ignore
+
+  notify:
+    name: Telegram Notify
+    needs: [test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send result
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_RESULT: ${{ needs.test.result }}
+          ACTOR: ${{ github.actor }}
+          BRANCH: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::Thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID (PR từ fork không có repo secrets). Bỏ qua gửi thông báo."
+            exit 0
+          fi
+
+          if [ "$TEST_RESULT" = "success" ]; then
+            ICON="✅"
+            TITLE="Gateway Service CI PASSED"
+          else
+            ICON="❌"
+            TITLE="Gateway Service CI FAILED"
+          fi
+
+          MESSAGE=$(cat <<EOFMSG
+          ${ICON} ${TITLE}
+          Event: ${EVENT}
+          Editor: ${ACTOR}
+          Branch: ${BRANCH}
+          Commit: ${SHA}
+          Test: ${TEST_RESULT}
+          Log: ${RUN_URL}
+          EOFMSG
+          )
+
+          curl -sf -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MESSAGE}" \
+            || echo "::warning::Gửi thông báo Telegram thất bại"

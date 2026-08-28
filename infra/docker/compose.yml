@@ -1,14 +1,20 @@
 services:
+  # Only started when the "nginx" profile is active (test/staging/production).
+  # Local dev (features branch) skips this and talks to gateway-service directly —
+  # see compose.local.yml.
   nginx:
     image: nginx:alpine
     container_name: blue-ride-nginx
     restart: unless-stopped
+    profiles:
+      - nginx
     ports:
       - "80:80"
     volumes:
       - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - core-service
+      - gateway-service
+
   postgres:
     image: postgres:17
     container_name: blue-ride-postgres
@@ -27,23 +33,137 @@ services:
       timeout: 5s
       retries: 5
 
-  core-service:
+  mongo:
+    image: mongo:7
+    container_name: blue-ride-mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: blue-ride-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: apache/kafka:3.9.1
+    container_name: blue-ride-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  auth-service:
     build:
-      context: ../../backend/core-service
-    container_name: blue-ride-core-service
+      context: ../../backend
+      dockerfile: auth-service/Dockerfile
+    container_name: blue-ride-auth-service
     restart: unless-stopped
     expose:
-    - "8080"
+      - "8080"
     environment:
       POSTGRES_URL: ${POSTGRES_URL:-jdbc:postgresql://postgres:5432/blue_ride_postgres}
       POSTGRES_USERNAME: ${POSTGRES_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      JWT_KEYS_DIRECTORY: /app/keys
-    volumes:
-      - ./secrets:/app/keys
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+      JWT_PRIVATE_KEY_PEM: ${JWT_PRIVATE_KEY_PEM:-}
+      JWT_PUBLIC_KEY_PEM: ${JWT_PUBLIC_KEY_PEM:-}
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  core-service:
+    build:
+      context: ../../backend
+      dockerfile: core-service/Dockerfile
+    container_name: blue-ride-core-service
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
+      MONGO_DB: ${MONGO_DB:-blue_ride_core}
+      REDIS_ADDR: ${REDIS_ADDR:-redis:6379}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      AUTH_BASE_URL: ${AUTH_BASE_URL:-http://auth-service:8080}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  gateway-service:
+    build:
+      context: ../../backend
+      dockerfile: gateway-service/Dockerfile
+    container_name: blue-ride-gateway-service
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+      AUTH_BASE_URL: ${AUTH_BASE_URL:-http://auth-service:8080}
+      CORE_BASE_URL: ${CORE_BASE_URL:-http://core-service:8080}
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      core-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
 volumes:
   postgres-data:
+  mongo-data:
+  redis-data:

@@ -1,0 +1,9 @@
+actions:
+  auth.ping:
+    method: GET
+    upstream: auth
+    path: /internal/v1/ping
+  core.ping:
+    method: GET
+    upstream: core
+    path: /internal/v1/ping
