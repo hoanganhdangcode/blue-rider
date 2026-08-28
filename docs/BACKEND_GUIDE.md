@@ -14,6 +14,8 @@ Tài liệu này giải thích **kiến trúc**, **cấu trúc code**, **cách b
 6. [Yêu cầu môi trường](#6-yêu-cầu-môi-trường)
 7. [Build & chạy test](#7-build--chạy-test)
 8. [Chạy local bằng Docker Compose](#8-chạy-local-bằng-docker-compose)
+   - [8.x Chạy local (features) — không Nginx, LAN](#8x-chạy-local-features--không-nginx-lan)
+   - [Android/Flutter — cấu hình API_BASE_URL](#androidflutter--cấu-hình-api_base_url)
 9. [Biến môi trường](#9-biến-môi-trường)
 10. [Cách thêm API mới (action)](#10-cách-thêm-api-mới-action)
 11. [Triển khai (Deploy)](#11-triển-khai-deploy)
@@ -75,11 +77,16 @@ blue-ride/
 │   ├── core-service/
 │   └── gateway-service/
 ├── infra/
-│   ├── .env.example               # Mẫu biến môi trường
-│   ├── docker/compose.yml         # Stack local / VPS
-│   └── nginx/nginx.conf
-└── .github/workflows/             # CI từng service + Docker + Deploy
+│   ├── .env.example               # Mẫu biến môi trường (một nguồn chân lý)
+│   ├── docker/
+│   │   ├── compose.yml            # Base — dùng chung mọi environment
+│   │   └── compose.local.yml      # Override cho `features`: publish gateway, không Nginx
+│   ├── nginx/nginx.conf           # Chỉ chạy khi bật profile `nginx` (test/production)
+│   └── scripts/dev-ip.sh          # In LAN IP + lệnh mẫu cho local dev
+└── .github/workflows/             # CI từng service + Docker + Deploy (không chạy trên `features`)
 ```
+
+`frontend/appmobile/env/*.json.example` là template `--dart-define-from-file` cho Flutter (local/test/production) — xem [Android/Flutter — cấu hình `API_BASE_URL`](#androidflutter--cấu-hình-api_base_url).
 
 Mỗi service Spring Boot có layout chuẩn:
 
@@ -292,17 +299,21 @@ Chỉnh `INTERNAL_API_KEY`, mật khẩu DB nếu cần. **Không commit** file 
 
 ### Bước 2 — Build & lên container
 
+Stack đầy đủ qua Nginx (giống `develop`/`main` — dùng profile `nginx`):
+
 ```bash
 cd infra/docker
-docker compose --env-file ../.env up -d --build
+docker compose --env-file ../.env -f compose.yml --profile nginx up -d --build
 ```
 
 Lần đầu sẽ build 3 image Java (có thể mất vài phút).
 
+> Chạy local không cần Nginx (branch `features`)? Xem [8.x Chạy local (features) — không Nginx, LAN](#8x-chạy-local-features--không-nginx-lan) bên dưới.
+
 ### Bước 3 — Kiểm tra
 
 ```bash
-docker compose -f infra/docker/compose.yml ps
+docker compose -f infra/docker/compose.yml --profile nginx ps
 ```
 
 Smoke test:
@@ -322,17 +333,17 @@ Kỳ vọng `"success": true`.
 ### Dừng / xem log
 
 ```bash
-docker compose -f infra/docker/compose.yml logs -f gateway-service
-docker compose -f infra/docker/compose.yml down
+docker compose -f infra/docker/compose.yml --profile nginx logs -f gateway-service
+docker compose -f infra/docker/compose.yml --profile nginx down
 ```
 
 Xóa luôn volume (mất data local):
 
 ```bash
-docker compose -f infra/docker/compose.yml down -v
+docker compose -f infra/docker/compose.yml --profile nginx down -v
 ```
 
-### Port lộ ra máy host
+### Port lộ ra máy host (stack đầy đủ, có Nginx — `develop`/`main`)
 
 | Port | Thành phần | Ghi chú |
 |---|---|---|
@@ -341,7 +352,59 @@ docker compose -f infra/docker/compose.yml down -v
 | `27017` | Mongo | Chỉ `127.0.0.1` |
 | `6379` | Redis | Chỉ `127.0.0.1` |
 
-Ba service Java **không** publish port ra host trong Compose (chỉ `expose` nội bộ Docker network). Debug trực tiếp container hoặc tạm thêm `ports` nếu cần.
+Ba service Java **không** publish port ra host trong Compose gốc (chỉ `expose` nội bộ Docker network) — Nginx là cửa ngõ duy nhất. Muốn debug trực tiếp một service, dùng `docker compose exec` hoặc override `ports` tạm thời.
+
+### 8.x Chạy local (`features`) — không Nginx, LAN
+
+Trên branch `features`, không dùng Nginx. `gateway-service` được publish thẳng ra host qua file override `infra/docker/compose.local.yml`, để thiết bị/emulator Android cùng LAN gọi thẳng vào backend.
+
+```bash
+git checkout features
+
+cd infra
+cp .env.example .env
+
+cd docker
+docker compose --env-file ../.env -f compose.yml -f compose.local.yml up -d --build
+
+# Tìm LAN IP hiện tại + lệnh mẫu (curl, flutter run)
+../scripts/dev-ip.sh
+```
+
+Kiến trúc:
+
+```
+Android Device (LAN)
+      │  HTTP
+      ▼
+<LAN_IP>:${GATEWAY_PORT}   (gateway-service, publish trực tiếp, KHÔNG qua Nginx)
+      │
+      ├── auth-service   (chỉ nội bộ Docker network)
+      └── core-service   (chỉ nội bộ Docker network)
+```
+
+Ghi chú:
+
+- `GATEWAY_PORT` (mặc định `8080`) khai báo trong `infra/.env` — đổi port chỉ sửa **một chỗ**. LAN IP không cấu hình ở backend: Docker publish port trên mọi network interface (`0.0.0.0`) nên máy dev có IP LAN nào thì dùng IP đó, không hard-code trong source.
+- `auth-service`, `core-service`, Postgres/Mongo/Redis/Kafka **không** publish ra LAN — giữ đúng quy tắc "client chỉ gọi qua gateway" ngay cả khi dev local.
+- Không cần bật GitHub Actions cho `features` — không có workflow nào trigger trên branch này.
+- Trỏ app Flutter vào backend LAN — xem [Android/Flutter — cấu hình `API_BASE_URL`](#androidflutter--cấu-hình-api_base_url) bên dưới, hoặc chạy `infra/scripts/dev-ip.sh` để có sẵn lệnh.
+
+### Android/Flutter — cấu hình `API_BASE_URL`
+
+`ServiceConfig.fromEnvironment()` (package `frontend/appmobile/packages/service`) đọc base URL từ biến compile-time `API_BASE_URL`, không hard-code trong source:
+
+```bash
+# Cách nhanh — một lần chạy
+cd frontend/appmobile/apps/app_a   # hoặc app_b
+flutter run --dart-define=API_BASE_URL=http://<LAN_IP>:8080
+
+# Cách bền hơn — ghi 1 lần vào file local dùng chung 2 app (không commit)
+cp ../../env/local.json.example ../../env/local.json   # sửa IP trong file
+flutter run --dart-define-from-file=../../env/local.json
+```
+
+`frontend/appmobile/env/*.json` bị gitignore (chỉ commit các file `.json.example`) — không commit LAN IP hay URL thật của dev. Cùng cơ chế dùng cho `test`/`production` (`env/test.json`, `env/production.json`) khi build cho `develop`/`main`.
 
 ---
 
@@ -360,6 +423,8 @@ Tham chiếu [`infra/.env.example`](../infra/.env.example).
 | `REDIS_ADDR` | core | host:port Redis |
 | `KAFKA_BOOTSTRAP_SERVERS` | core | Broker Kafka |
 | `JWT_PRIVATE_KEY_PEM` / `JWT_PUBLIC_KEY_PEM` | auth | RSA PEM (để trống = ephemeral local) |
+| `GATEWAY_PORT` | `compose.local.yml` (`features`) | Port host publish cho gateway-service, mặc định `8080` |
+| `SERVER_ADDRESS` / `SERVER_PORT` | mỗi service (tùy chọn) | Ghi đè bind address/port khi chạy trực tiếp (không Docker); mặc định `0.0.0.0:8080` |
 
 Trong Docker network, hostname service = tên trong Compose (`auth-service`, `core-service`, `postgres`, …).
 
@@ -425,6 +490,7 @@ curl -s -X POST http://localhost/api \
 | `VPS_SSH_PRIVATE_KEY` | Private key deploy |
 | `POSTGRES_URL` | JDBC trong mạng Docker |
 | `POSTGRES_USERNAME` / `POSTGRES_PASSWORD` | DB |
+| `INTERNAL_API_KEY` (khuyến nghị) | Nếu không cấu hình, staging chạy với giá trị mặc định `dev-internal-key` trong `compose.yml` — nên đặt secret riêng cho staging/production |
 
 ### 11.3. Deploy thủ công trên VPS
 
@@ -434,8 +500,8 @@ git fetch origin develop
 git reset --hard origin/develop
 
 # Đảm bảo .env đã có (không ghi đè bằng git)
-docker compose -f infra/docker/compose.yml up -d --build
-docker compose -f infra/docker/compose.yml ps
+docker compose -f infra/docker/compose.yml --profile nginx up -d --build
+docker compose -f infra/docker/compose.yml --profile nginx ps
 ```
 
 Smoke test từ máy local (trỏ domain/IP VPS):
@@ -451,9 +517,9 @@ curl -s -X POST http://<VPS_HOST>/api \
 Push / merge vào `develop` (thay đổi `backend/**` hoặc `infra/**`) → job Staging:
 
 1. SSH vào VPS.
-2. Ghi một phần `.env` (Postgres) từ secrets.
+2. Ghi một phần `.env` (Postgres, `INTERNAL_API_KEY`) từ secrets.
 3. `git reset --hard origin/develop`.
-4. `docker compose ... up -d --build`.
+4. `docker compose ... --profile nginx up -d --build`.
 
 Production trên `main` cần bật lại job tương tự khi sẵn sàng (TLS, backup DB, secret riêng).
 

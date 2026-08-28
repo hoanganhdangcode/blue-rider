@@ -8,3 +8,7 @@
 .codegraph/
 opencode-skills/
 AGENTS.md
+
+# Per-environment Flutter dart-define files (local LAN IP, real API hosts).
+# Commit only the *.json.example templates.
+frontend/appmobile/env/*.json

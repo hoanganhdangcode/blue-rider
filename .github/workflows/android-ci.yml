@@ -6,11 +6,11 @@ on:
       - develop
       - main
     paths:
-      - 'frontend/android/**'
+      - 'frontend/appmobile/**'
       - '.github/workflows/android-ci.yml'
   pull_request:
     paths:
-      - 'frontend/android/**'
+      - 'frontend/appmobile/**'
       - '.github/workflows/android-ci.yml'
   workflow_dispatch:
 

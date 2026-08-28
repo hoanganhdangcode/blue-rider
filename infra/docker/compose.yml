@@ -1,8 +1,13 @@
 services:
+  # Only started when the "nginx" profile is active (test/staging/production).
+  # Local dev (features branch) skips this and talks to gateway-service directly —
+  # see compose.local.yml.
   nginx:
     image: nginx:alpine
     container_name: blue-ride-nginx
     restart: unless-stopped
+    profiles:
+      - nginx
     ports:
       - "80:80"
     volumes:

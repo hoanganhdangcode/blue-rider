@@ -1,0 +1,16 @@
+# Local development override (features branch) — no Nginx, no CI.
+#
+# Usage:
+#   cd infra/docker
+#   docker compose --env-file ../.env -f compose.yml -f compose.local.yml up -d --build
+#
+# Publishes gateway-service straight to the host on all network interfaces, so
+# devices on the same LAN (Android emulator/device) can reach it at
+# http://<YOUR_LAN_IP>:${GATEWAY_PORT}. Run infra/scripts/dev-ip.sh to find
+# YOUR_LAN_IP. auth-service, core-service, and the data stores stay internal
+# to the Docker network / 127.0.0.1-only, matching the "clients only call the
+# gateway" rule in docs/PROJECT_CONTEXT.md.
+services:
+  gateway-service:
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
