@@ -1,25 +1,18 @@
-FROM gradle:9-jdk21 AS builder
-
-WORKDIR /app
-
-COPY build.gradle settings.gradle ./
-COPY gradle ./gradle
-COPY gradlew ./
-
-RUN chmod +x gradlew
-RUN ./gradlew dependencies --no-daemon
-
-COPY src ./src
-
-RUN ./gradlew bootJar --no-daemon
-
+# syntax=docker/dockerfile:1
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /src
+COPY gradlew settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY gradle gradle
+COPY config config
+COPY crypto crypto
+COPY core-service core-service
+RUN chmod +x gradlew && ./gradlew :core-service:bootJar --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
-
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-COPY --from=builder /app/build/libs/*.jar app.jar
-
+COPY --from=build /src/core-service/build/libs/*.jar app.jar
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]

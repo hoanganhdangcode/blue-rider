@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: core-service
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+      database: ${MONGO_DB:blue_ride_core}
+    redis:
+      url: redis://${REDIS_ADDR:localhost:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_BROKERS:localhost:9092}}
+    listener:
+      auto-startup: false
+
+app:
+  internal-api-key: ${INTERNAL_API_KEY:dev-internal-key}
+  auth-base-url: ${AUTH_BASE_URL:http://localhost:8081}
