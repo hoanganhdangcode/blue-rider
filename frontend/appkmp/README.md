@@ -1,24 +1,38 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# blue-rider — KMP Mobile App
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Kotlin Multiplatform app (Android + iOS) với Compose Multiplatform. Nằm trong mono-repo `blue-rider`.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## Modules
 
-### Running the apps
+| Module | Vai trò |
+|---|---|
+| `shared` | App shell: entry point, `Platform` (expect/actual), account — phụ thuộc `rideui` + `ridecore` |
+| `rideui` | Ride UI SDK (Compose Multiplatform, self-contained) — `api(project(":ridecore"))` |
+| `ridecore` | Ride business engine: API client, booking domain — không UI, không Compose |
+| `androidApp` | Host Android, chỉ phụ thuộc `shared` |
+| `iosApp` | Host SwiftUI, gọi `MainViewController()` từ `shared` |
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+Dependency rule: `shared → rideui → ridecore`, `ridecore` không phụ thuộc module nào. Chi tiết: [`docs/Architecture.md`](./docs/Architecture.md).
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## Build
 
----
+```bash
+# Android
+./gradlew :androidApp:assembleDebug
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+# AAR (ridecore.aar, rideui.aar)
+./gradlew createAars
+
+# XCFramework (cần Xcode đầy đủ)
+./gradlew createXCFrameworks
+
+# Lint + unit test
+./gradlew :ridecore:lint :rideui:lint :shared:lint :androidApp:lintDebug
+```
+
+iOS: mở `iosApp` trong Xcode (sau khi chạy `./gradlew createXCFrameworks` nếu build framework bằng Gradle).
+
+## Yêu cầu
+
+- JDK 21 (Gradle daemon toolchain — tự tải qua foojay), Android SDK `compileSdk 37` / `minSdk 24`
+- macOS + Xcode để build iOS

@@ -8,3 +8,21 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.androidLint) apply false
 }
+
+tasks.register("createXCFrameworks") {
+    group = "distribution"
+    description = "Assemble ridecore and rideui XCFrameworks for distribution"
+    dependsOn(
+        ":ridecore:assembleRidecoreKitXCFramework",
+        ":rideui:assembleRideuiKitXCFramework",
+    )
+}
+
+tasks.register("createAars") {
+    group = "distribution"
+    description = "Assemble ridecore and rideui Android AARs for distribution"
+    dependsOn(
+        ":ridecore:bundleAndroidMainAar",
+        ":rideui:bundleAndroidMainAar",
+    )
+}
