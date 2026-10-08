@@ -6,6 +6,14 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
 }
+val dev = "dev"
+val prod = "prod"
+//==========================
+val env = dev
+//==========================
+val envFile = rootProject.file("./env/${env}.json")
+val envJson = groovy.json.JsonSlurper().parse(envFile) as Map<*, *>
+
 
 kotlin {
     listOf(

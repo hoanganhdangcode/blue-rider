@@ -1,0 +1,6 @@
+{
+  "environment": "prod",
+  "baseUrl": "http://8.8.8.8:8080",
+  "enableHttpLog": false,
+  "debug": false
+}
