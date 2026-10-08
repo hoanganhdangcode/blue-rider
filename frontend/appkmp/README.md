@@ -6,7 +6,7 @@ Kotlin Multiplatform app (Android + iOS) với Compose Multiplatform. Nằm tron
 
 | Module | Vai trò |
 |---|---|
-| `shared` | App shell: entry point, `Platform` (expect/actual), account — phụ thuộc `rideui` + `ridecore` |
+| `shared` | App shell: entry (`presentation/App.kt`), `Platform` (`core/util`) — phụ thuộc `rideui` + `ridecore`; Clean Architecture: `presentation/ domain/ data/ core/` |
 | `rideui` | Ride UI SDK (Compose Multiplatform, self-contained) — `api(project(":ridecore"))` |
 | `ridecore` | Ride business engine: API client, booking domain — không UI, không Compose |
 | `androidApp` | Host Android, chỉ phụ thuộc `shared` |

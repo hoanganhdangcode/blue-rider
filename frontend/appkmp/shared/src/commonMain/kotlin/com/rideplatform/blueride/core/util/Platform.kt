@@ -1,4 +1,4 @@
-package com.rideplatform.blueride
+package com.rideplatform.blueride.core.util
 
 interface Platform {
     val name: String
