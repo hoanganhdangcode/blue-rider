@@ -1,11 +1,15 @@
 package com.rideplatform.blueride.presentation.component
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
@@ -13,8 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.rideplatform.blueride.presentation.theme.AppSpacing
+import com.rideplatform.blueride.presentation.theme.AppTheme
 import com.rideplatform.blueride.presentation.theme.Primary
 
 @Composable
@@ -47,5 +53,24 @@ fun SecondaryButton(
             text = text,
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.W600),
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SecondaryButtonPreview() {
+    AppTheme {
+        Column(
+            modifier = Modifier.padding(AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        ) {
+            SecondaryButton(text = "Huỷ chuyến", onClick = {})
+            SecondaryButton(
+                text = "Lịch sử",
+                onClick = {},
+                leadingIcon = { Icon(AppIcons.History, contentDescription = null) },
+            )
+            SecondaryButton(text = "Huỷ chuyến", onClick = {}, enabled = false)
+        }
     }
 }

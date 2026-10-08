@@ -1,7 +1,12 @@
 package com.rideplatform.blueride.presentation.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -10,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
+import com.rideplatform.blueride.presentation.theme.AppSpacing
+import com.rideplatform.blueride.presentation.theme.AppTheme
 import com.rideplatform.blueride.presentation.theme.SearchBarIdle
 
 @Composable
@@ -66,4 +74,36 @@ fun RideTextField(
             cursorColor = MaterialTheme.colorScheme.primary,
         ),
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RideTextFieldPreview() {
+    AppTheme {
+        Column(
+            modifier = Modifier.padding(AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        ) {
+            RideTextField(
+                value = "",
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = "Bạn muốn đi đâu?",
+                leadingIcon = { Icon(AppIcons.Search, contentDescription = null) },
+            )
+            RideTextField(
+                value = "268 Lý Thường Kiệt, Quận 10",
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = { Icon(AppIcons.Search, contentDescription = null) },
+            )
+            RideTextField(
+                value = "",
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = "Không khả dụng",
+                enabled = false,
+            )
+        }
+    }
 }

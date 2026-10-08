@@ -1,11 +1,21 @@
 package com.rideplatform.blueride.presentation.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathBuilder
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.rideplatform.blueride.presentation.theme.AppSpacing
+import com.rideplatform.blueride.presentation.theme.AppTheme
 
 object AppIcons {
         val Home: ImageVector =
@@ -216,3 +226,29 @@ private fun appIcon(name: String, block: PathBuilder.() -> Unit): ImageVector =
     ).apply {
         path(fill = SolidColor(Color.Black), name = name, pathBuilder = block)
     }.build()
+
+@Preview(showBackground = true)
+@Composable
+private fun AppIconsPreview() {
+    val icons = listOf(
+        AppIcons.Home,
+        AppIcons.History,
+        AppIcons.Wallet,
+        AppIcons.Offer,
+        AppIcons.Person,
+        AppIcons.Search,
+        AppIcons.Star,
+        AppIcons.StarHalf,
+        AppIcons.StarBorder,
+    )
+    AppTheme {
+        Row(
+            modifier = Modifier.padding(AppSpacing.md),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        ) {
+            icons.forEach { icon ->
+                Icon(icon, contentDescription = icon.name, tint = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}

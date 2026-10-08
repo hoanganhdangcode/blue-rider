@@ -2,13 +2,22 @@ package com.rideplatform.blueride.presentation.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.rideplatform.blueride.presentation.theme.AppSpacing
+import com.rideplatform.blueride.presentation.theme.AppTheme
 import com.rideplatform.blueride.presentation.theme.Warning
 
 @Composable
@@ -42,6 +51,23 @@ fun RatingBar(
                 modifier = iconModifier,
                 tint = if (fraction > 0f) Warning else MaterialTheme.colorScheme.outlineVariant,
             )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RatingBarPreview() {
+    var rating by remember { mutableFloatStateOf(3f) }
+    AppTheme {
+        Column(
+            modifier = Modifier.padding(AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        ) {
+            RatingBar(rating = 5f)
+            RatingBar(rating = 3.5f)
+            RatingBar(rating = 0f)
+            RatingBar(rating = rating, starSize = 32, onRatingChange = { rating = it })
         }
     }
 }
