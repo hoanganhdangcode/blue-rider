@@ -1,0 +1,6 @@
+{
+  "environment": "dev",
+  "baseUrl": "http://127.0.0.1:8080",
+  "enableHttpLog": true,
+  "debug": true
+}
