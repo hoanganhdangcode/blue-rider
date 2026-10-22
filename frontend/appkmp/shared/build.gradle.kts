@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinxSerialization)
 }
 val dev = "dev"
 val prod = "prod"
@@ -57,8 +58,6 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.android)
-
-
         }
         commonMain.dependencies {
             implementation(project(":rideui"))
@@ -82,9 +81,19 @@ kotlin {
             //koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+
+            //json serialization
+            implementation(libs.kotlinx.serialization.json)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.ktor.client.mock)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+        commonMain {
+            // nối BuildEnv.kt vào common
+            kotlin.srcDir(generateBuildEnv)
         }
     }
 }
