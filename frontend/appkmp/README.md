@@ -6,13 +6,11 @@ Kotlin Multiplatform app (Android + iOS) với Compose Multiplatform. Nằm tron
 
 | Module | Vai trò |
 |---|---|
-| `shared` | App shell: entry (`presentation/App.kt`), `Platform` (`core/util`) — phụ thuộc `rideui` + `ridecore`; Clean Architecture: `presentation/ domain/ data/ core/` |
-| `rideui` | Ride UI SDK (Compose Multiplatform, self-contained) — `api(project(":ridecore"))` |
-| `ridecore` | Ride business engine: API client, booking domain — không UI, không Compose |
+| `shared` | Toàn bộ app: entry (`presentation/App.kt`), `Platform` (`core/util`); Clean Architecture: `presentation/ domain/ data/ core/` |
 | `androidApp` | Host Android, chỉ phụ thuộc `shared` |
 | `iosApp` | Host SwiftUI, gọi `MainViewController()` từ `shared` |
 
-Dependency rule: `shared → rideui → ridecore`, `ridecore` không phụ thuộc module nào. Chi tiết: [`docs/Architecture.md`](./docs/Architecture.md).
+Đã bỏ chiến lược tách SDK (`ridecore`/`rideui`) để đơn giản hoá kiến trúc — toàn bộ business logic + UI của Ride nằm trong `shared`.
 
 ## Build
 
@@ -20,14 +18,11 @@ Dependency rule: `shared → rideui → ridecore`, `ridecore` không phụ thu�
 # Android
 ./gradlew :androidApp:assembleDebug
 
-# AAR (ridecore.aar, rideui.aar)
-./gradlew createAars
-
 # XCFramework (cần Xcode đầy đủ)
 ./gradlew createXCFrameworks
 
 # Lint + unit test
-./gradlew :ridecore:lint :rideui:lint :shared:lint :androidApp:lintDebug
+./gradlew :shared:lint :androidApp:lintDebug
 ```
 
 iOS: mở `iosApp` trong Xcode (sau khi chạy `./gradlew createXCFrameworks` nếu build framework bằng Gradle).

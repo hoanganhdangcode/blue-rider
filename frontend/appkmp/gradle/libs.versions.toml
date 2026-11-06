@@ -23,6 +23,7 @@ koin = "4.2.2"
 koin-plugin = "1.2.1"
 kotlinx-serialization = "1.12.0"
 kotlinx-coroutines = "1.11.0"
+decompose = "3.5.0"
 
 
 [libraries]
@@ -73,6 +74,8 @@ koin-ktor = { module = "io.insert-koin:koin-ktor" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 koin-annotations = { module = "io.insert-koin:koin-annotations",version.ref = "koin"}
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
+decompose-compose = { module = "com.arkivanov.decompose:extensions-compose", version.ref = "decompose" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

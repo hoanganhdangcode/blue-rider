@@ -1,9 +1,19 @@
 package com.rideplatform.blueride.presentation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.rideplatform.rideui.RideApp
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
+// TODO: thay bằng điều hướng Decompose (RootComponent) khi hoàn thiện.
 @Composable
 fun App() {
-    RideApp()
+    MaterialTheme {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Blue Ride")
+        }
+    }
 }

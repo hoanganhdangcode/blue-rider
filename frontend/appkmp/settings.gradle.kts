@@ -29,5 +29,3 @@ dependencyResolutionManagement {
 
 include(":androidApp")
 include(":shared")
-include(":ridecore")
-include(":rideui")

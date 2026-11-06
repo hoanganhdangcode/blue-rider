@@ -61,9 +61,6 @@ kotlin {
             implementation(libs.ktor.client.android)
         }
         commonMain.dependencies {
-            implementation(project(":rideui"))
-            implementation(project(":ridecore"))
-
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -78,6 +75,10 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.serialization.kotlinx.json)
+
+            // Decompose (navigation)
+            implementation(libs.decompose)
+            implementation(libs.decompose.compose)
 
             //koin
             implementation(libs.koin.core)
