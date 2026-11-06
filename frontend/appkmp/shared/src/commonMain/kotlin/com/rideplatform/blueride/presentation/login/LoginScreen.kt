@@ -1,11 +1,15 @@
 package com.rideplatform.blueride.presentation.login
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +27,11 @@ import com.rideplatform.blueride.presentation.component.PrimaryButton
 import com.rideplatform.blueride.presentation.component.RideTextField
 import com.rideplatform.blueride.presentation.theme.AppSpacing
 import com.rideplatform.blueride.presentation.theme.AppTheme
+import com.rideplatform.blueride.presentation.theme.Brand
+import com.rideplatform.blueride.presentation.theme.ThemeController
+import com.rideplatform.blueride.presentation.theme.ThemeMode
 import kotlinx.coroutines.flow.collectLatest
+import org.koin.compose.koinInject
 
 @Composable
 fun LoginScreen(
@@ -31,6 +39,7 @@ fun LoginScreen(
     onNavigateToHome: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val themeController = koinInject<ThemeController>()
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collectLatest { effect ->
@@ -40,10 +49,59 @@ fun LoginScreen(
         }
     }
 
-    LoginContent(
-        state = uiState,
-        onEvent = viewModel::handleEvent,
-    )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Demo Multi Theme Design System: đổi Brand + Light/Dark/System tại runtime.
+        ThemeSwitcherRow(
+            themeController = themeController,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppSpacing.screenMargin, vertical = AppSpacing.sm),
+        )
+
+        LoginContent(
+            state = uiState,
+            onEvent = viewModel::handleEvent,
+        )
+    }
+}
+
+@Composable
+private fun ThemeSwitcherRow(
+    themeController: ThemeController,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+    ) {
+        Brand.entries.forEach { brand ->
+            FilterChip(
+                selected = themeController.brand == brand,
+                onClick = { themeController.selectBrand(brand) },
+                label = { Text(brand.displayName, style = MaterialTheme.typography.labelMedium) },
+            )
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        IconButton(
+            onClick = {
+                val next = when (themeController.themeMode) {
+                    ThemeMode.Light -> ThemeMode.Dark
+                    ThemeMode.Dark -> ThemeMode.Light
+                }
+                themeController.selectThemeMode(next)
+            },
+        ) {
+            Text(
+                text = when (themeController.themeMode) {
+                    ThemeMode.Light -> "☀"
+                    ThemeMode.Dark -> "🌙"
+                },
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+    }
 }
 
 // Tách riêng phần UI thuần (không phụ thuộc LoginViewModel/Koin) để @Preview mock được
