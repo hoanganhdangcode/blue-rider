@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import com.rideplatform.blueride.presentation.theme.AppSpacing
 import com.rideplatform.blueride.presentation.theme.AppTheme
@@ -31,6 +33,8 @@ fun RideTextField(
     singleLine: Boolean = true,
     enabled: Boolean = true,
     imeAction: ImeAction = ImeAction.Search,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     onImeAction: (() -> Unit)? = null,
 ) {
     val placeholderSlot: @Composable (() -> Unit)? =
@@ -50,9 +54,15 @@ fun RideTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         textStyle = MaterialTheme.typography.bodyLarge,
-        keyboardOptions = KeyboardOptions(imeAction = imeAction),
+        visualTransformation = visualTransformation,
+        keyboardOptions = KeyboardOptions(imeAction = imeAction, keyboardType = keyboardType),
         keyboardActions = onImeAction?.let { action ->
-            KeyboardActions(onSearch = { action() })
+            when (imeAction) {
+                ImeAction.Done -> KeyboardActions(onDone = { action() })
+                ImeAction.Next -> KeyboardActions(onNext = { action() })
+                ImeAction.Go -> KeyboardActions(onGo = { action() })
+                else -> KeyboardActions(onSearch = { action() })
+            }
         } ?: KeyboardActions.Default,
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color.White,

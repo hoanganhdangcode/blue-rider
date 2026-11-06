@@ -11,11 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-interface UiState
-interface UiEvent
-interface UiEffect
 
-abstract class BaseViewModel<State : UiState, Event : UiEvent, Effect : UiEffect>(
+abstract class BaseViewModel<State : UIState, Event : UIIntent, Effect : UIEffect>(
     initialState: State,
 ) : ViewModel() {
 

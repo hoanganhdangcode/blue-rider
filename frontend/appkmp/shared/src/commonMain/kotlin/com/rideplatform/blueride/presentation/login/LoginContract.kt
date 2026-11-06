@@ -1,26 +1,23 @@
 package com.rideplatform.blueride.presentation.login
 
 import com.rideplatform.blueride.core.error.AppError
-import com.rideplatform.blueride.presentation.base.UiEffect
-import com.rideplatform.blueride.presentation.base.UiEvent
-import com.rideplatform.blueride.presentation.base.UiState
+import com.rideplatform.blueride.presentation.base.UIEffect
+import com.rideplatform.blueride.presentation.base.UIIntent
+import com.rideplatform.blueride.presentation.base.UIState
 
-// State là 1 data class phẳng (không sealed Loading/Success/Error như mẫu) vì đây là
-// màn hình form: phải giữ lại giá trị phone/pin người dùng đã nhập xuyên suốt lúc
-// loading/error, sealed state kiểu list-fetch sẽ làm mất giá trị form mỗi lần đổi state.
 data class LoginUiState(
     val phone: String = "",
     val pin: String = "",
     val isLoading: Boolean = false,
     val error: AppError? = null,
-) : UiState
+) : UIState
 
-sealed interface LoginUiEvent : UiEvent {
+sealed interface LoginUiEvent : UIIntent {
     data class PhoneChanged(val value: String) : LoginUiEvent
     data class PinChanged(val value: String) : LoginUiEvent
     data object Submit : LoginUiEvent
 }
 
-sealed interface LoginUiEffect : UiEffect {
+sealed interface LoginUiEffect : UIEffect {
     data object NavigateToUpdateProfile : LoginUiEffect
 }

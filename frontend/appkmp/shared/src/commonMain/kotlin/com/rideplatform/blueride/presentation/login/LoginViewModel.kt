@@ -7,7 +7,7 @@ import com.rideplatform.blueride.presentation.base.BaseViewModel
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
-
+@KoinViewModel
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,
 ) : BaseViewModel<LoginUiState, LoginUiEvent, LoginUiEffect>(LoginUiState()) {

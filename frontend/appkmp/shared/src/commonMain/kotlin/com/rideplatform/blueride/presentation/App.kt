@@ -1,19 +1,19 @@
 package com.rideplatform.blueride.presentation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import com.rideplatform.blueride.presentation.login.LoginScreen
+import com.rideplatform.blueride.presentation.login.LoginViewModel
+import com.rideplatform.blueride.presentation.theme.AppTheme
+import org.koin.compose.viewmodel.koinViewModel
 
-// TODO: thay bằng điều hướng Decompose (RootComponent) khi hoàn thiện.
+// TODO: thay bằng điều hướng Decompose (RootComponent) khi hoàn thiện — hiện tạm gọi thẳng LoginScreen.
 @Composable
 fun App() {
-    MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Blue Ride")
-        }
+    AppTheme {
+        val viewModel = koinViewModel<LoginViewModel>()
+        LoginScreen(
+            viewModel = viewModel,
+            onNavigateToHome = { /* TODO: điều hướng sang Home khi có RootComponent */ },
+        )
     }
 }
