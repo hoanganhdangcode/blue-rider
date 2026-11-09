@@ -16,7 +16,7 @@ import org.koin.core.annotation.Single
 // Đường dẫn endpoint tạm đặt theo quy ước REST thông thường — cần đối chiếu lại
 // với core-service khi backend chốt route thật (hiện AuthController chưa tồn tại).
 @Single
-class AuthApi(private val httpClient: HttpClient, @Named("bcd") bcd : String, @Named("abc") abc : String) {
+class AuthApi(private val httpClient: HttpClient) {
 
     suspend fun checkPhone(phone: String): ApiResponse<CheckPhoneResponseDto> =
         httpClient.post("auth/check-phone") {

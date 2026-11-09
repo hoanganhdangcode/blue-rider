@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.koin.compiler)
+    alias(libs.plugins.ksp)
 }
 val dev = "dev"
 val prod = "prod"
@@ -90,6 +91,9 @@ kotlin {
             //json serialization
             implementation(libs.kotlinx.serialization.json)
 
+            // Room (KMP)
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -105,6 +109,10 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+
+    add("kspAndroid", libs.androidx.room3.compiler)
+    add("kspIosArm64", libs.androidx.room3.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room3.compiler)
 }
 
 abstract class GenerateBuildEnvTask: DefaultTask(){
