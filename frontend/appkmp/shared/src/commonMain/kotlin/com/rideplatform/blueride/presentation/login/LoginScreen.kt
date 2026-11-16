@@ -1,6 +1,5 @@
 package com.rideplatform.blueride.presentation.login
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,7 +25,6 @@ import com.rideplatform.blueride.presentation.component.PrimaryButton
 import com.rideplatform.blueride.presentation.component.RideTextField
 import com.rideplatform.blueride.presentation.theme.AppSpacing
 import com.rideplatform.blueride.presentation.theme.AppTheme
-import com.rideplatform.blueride.presentation.theme.Brand
 import com.rideplatform.blueride.presentation.theme.ThemeController
 import com.rideplatform.blueride.presentation.theme.ThemeMode
 import kotlinx.coroutines.flow.collectLatest
@@ -50,7 +47,7 @@ fun LoginScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Demo Multi Theme Design System: đổi Brand + Light/Dark/System tại runtime.
+        // Demo theme switcher: đổi Light/Dark tại runtime.
         ThemeSwitcherRow(
             themeController = themeController,
             modifier = Modifier
@@ -72,16 +69,7 @@ private fun ThemeSwitcherRow(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
-        Brand.entries.forEach { brand ->
-            FilterChip(
-                selected = themeController.brand == brand,
-                onClick = { themeController.selectBrand(brand) },
-                label = { Text(brand.displayName, style = MaterialTheme.typography.labelMedium) },
-            )
-        }
-
         Spacer(Modifier.weight(1f))
 
         IconButton(

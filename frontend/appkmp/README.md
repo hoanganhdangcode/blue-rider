@@ -6,11 +6,9 @@ Kotlin Multiplatform app (Android + iOS) với Compose Multiplatform. Nằm tron
 
 | Module | Vai trò |
 |---|---|
-| `shared` | Toàn bộ app: entry (`presentation/App.kt`), `Platform` (`core/util`); Clean Architecture: `presentation/ domain/ data/ core/` |
+| `shared` | Toàn bộ app: entry (`presentation/App.kt`), `Platform` (`core/util`) |
 | `androidApp` | Host Android, chỉ phụ thuộc `shared` |
 | `iosApp` | Host SwiftUI, gọi `MainViewController()` từ `shared` |
-
-Đã bỏ chiến lược tách SDK (`ridecore`/`rideui`) để đơn giản hoá kiến trúc — toàn bộ business logic + UI của Ride nằm trong `shared`.
 
 ## Build
 

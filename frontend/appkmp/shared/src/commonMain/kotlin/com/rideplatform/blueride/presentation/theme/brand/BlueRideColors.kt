@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 import com.rideplatform.blueride.presentation.theme.ExtendedColors
 
 // Nguồn: Stitch "BlueRide Vietnam" (thiết kế hiện có của app) — Deep Vietnamese Blue + Red.
-internal object BlueRideColors {
+public object BlueRideColors {
     val lightScheme = lightColorScheme(
         primary = Color(0xFF002576),
         onPrimary = Color(0xFFFFFFFF),

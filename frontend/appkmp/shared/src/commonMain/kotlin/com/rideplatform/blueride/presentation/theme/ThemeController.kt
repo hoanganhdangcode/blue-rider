@@ -7,15 +7,8 @@ import org.koin.core.annotation.Single
 
 @Single
 class ThemeController {
-    var brand: Brand by mutableStateOf(Brand.BlueRide)
-        private set
-
     var themeMode: ThemeMode by mutableStateOf(ThemeMode.Light)
         private set
-
-    fun selectBrand(value: Brand) {
-        brand = value
-    }
 
     fun selectThemeMode(value: ThemeMode) {
         themeMode = value
